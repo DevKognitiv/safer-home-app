@@ -21,6 +21,7 @@ const SEVERITY_COLOR: Record<Alert['severity'], string> = {
 const STATE_LABEL: Record<ConnectionState, string> = {
   disconnected: 'Disconnected',
   connecting: 'Connecting…',
+  authenticating: 'Authenticating…',
   connected: 'Connected',
   error: 'Connection error',
 };
