@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { SensorKind, SensorStatus } from '@/types';
-import { saferCIService } from '@/services/SaferCIService';
+import { SensorKind } from '@/types';
+import { useApp } from '@/state/AppContext';
 
 const KIND_LABEL: Record<SensorKind, string> = {
   motion: 'Motion',
@@ -15,9 +14,8 @@ const KIND_LABEL: Record<SensorKind, string> = {
 };
 
 export default function SensorsScreen() {
-  const [sensors, setSensors] = useState<SensorStatus[]>([]);
-
-  useEffect(() => saferCIService.onSensors(setSensors), []);
+  const { state } = useApp();
+  const { sensors } = state;
 
   return (
     <View style={styles.container}>

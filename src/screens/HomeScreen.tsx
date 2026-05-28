@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -15,7 +14,7 @@ import {
   RootStackParamList,
   RootTabParamList,
 } from '@/types';
-import { saferCIService } from '@/services/SaferCIService';
+import { useApp } from '@/state/AppContext';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Alerts'>,
@@ -37,17 +36,8 @@ const STATE_LABEL: Record<ConnectionState, string> = {
 };
 
 export default function HomeScreen({ navigation }: Props) {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [connection, setConnection] = useState<ConnectionState>('disconnected');
-
-  useEffect(() => {
-    const unsubAlerts = saferCIService.onAlerts(setAlerts);
-    const unsubState = saferCIService.onStateChange(setConnection);
-    return () => {
-      unsubAlerts();
-      unsubState();
-    };
-  }, []);
+  const { state } = useApp();
+  const { alerts, connection } = state;
 
   return (
     <View style={styles.container}>

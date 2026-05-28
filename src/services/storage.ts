@@ -1,10 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { ConnectionConfig } from '@/types';
+import { Alert, ConnectionConfig, SensorStatus } from '@/types';
 import { withDefaults } from '@/constants/config';
 
 const CONFIG_KEY = 'safer.connection.config';
 const TOKEN_KEY = 'safer_access_token';
+const ALERTS_CACHE_KEY = 'safer.cache.alerts';
+const SENSORS_CACHE_KEY = 'safer.cache.sensors';
 
 /**
  * Load the persisted connection config, merging the non-secret part (stored in
@@ -41,5 +43,40 @@ export async function saveConnectionConfig(
     await SecureStore.setItemAsync(TOKEN_KEY, token);
   } else {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
+  }
+}
+
+/** Load the last-known alerts and sensors for offline display. */
+export async function loadCachedCollections(): Promise<{
+  alerts: Alert[];
+  sensors: SensorStatus[];
+}> {
+  const [rawAlerts, rawSensors] = await Promise.all([
+    AsyncStorage.getItem(ALERTS_CACHE_KEY),
+    AsyncStorage.getItem(SENSORS_CACHE_KEY),
+  ]);
+  return {
+    alerts: parseArray<Alert>(rawAlerts),
+    sensors: parseArray<SensorStatus>(rawSensors),
+  };
+}
+
+export async function cacheAlerts(alerts: Alert[]): Promise<void> {
+  await AsyncStorage.setItem(ALERTS_CACHE_KEY, JSON.stringify(alerts));
+}
+
+export async function cacheSensors(sensors: SensorStatus[]): Promise<void> {
+  await AsyncStorage.setItem(SENSORS_CACHE_KEY, JSON.stringify(sensors));
+}
+
+function parseArray<T>(raw: string | null): T[] {
+  if (!raw) {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
   }
 }

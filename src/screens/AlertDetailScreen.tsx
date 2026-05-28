@@ -1,23 +1,14 @@
-import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Alert, RootStackParamList } from '@/types';
-import { saferCIService } from '@/services/SaferCIService';
+import { RootStackParamList } from '@/types';
+import { useAlert, useApp } from '@/state/AppContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AlertDetail'>;
 
 export default function AlertDetailScreen({ route, navigation }: Props) {
   const { alertId } = route.params;
-  const [alert, setAlert] = useState<Alert | undefined>(() =>
-    saferCIService.getAlerts().find((a) => a.id === alertId),
-  );
-
-  useEffect(() => {
-    const unsub = saferCIService.onAlerts((alerts) => {
-      setAlert(alerts.find((a) => a.id === alertId));
-    });
-    return unsub;
-  }, [alertId]);
+  const { acknowledge } = useApp();
+  const alert = useAlert(alertId);
 
   if (!alert) {
     return (
@@ -42,7 +33,7 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
         style={[styles.button, acknowledged && styles.buttonDisabled]}
         disabled={acknowledged}
         onPress={() => {
-          saferCIService.acknowledgeAlert(alert.id);
+          void acknowledge(alert.id);
           navigation.goBack();
         }}
       >

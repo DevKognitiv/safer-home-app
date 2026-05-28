@@ -10,12 +10,12 @@ import {
   View,
 } from 'react-native';
 import { ConnectionConfig } from '@/types';
-import { saferCIService } from '@/services/SaferCIService';
-import { saveConnectionConfig } from '@/services/storage';
+import { useApp } from '@/state/AppContext';
 import { buildWebSocketUrl } from '@/constants/config';
 
 export default function SettingsScreen() {
-  const initial = saferCIService.getConfig();
+  const { state, updateConfig } = useApp();
+  const initial = state.config;
   const [host, setHost] = useState(initial.host);
   const [port, setPort] = useState(String(initial.port));
   const [wsPath, setWsPath] = useState(initial.wsPath);
@@ -53,9 +53,7 @@ export default function SettingsScreen() {
       acknowledgeService: acknowledgeService.trim() || initial.acknowledgeService,
     };
     try {
-      await saveConnectionConfig(next);
-      saferCIService.setConfig(next);
-      saferCIService.connect();
+      await updateConfig(next);
       RNAlert.alert('Saved', 'Connection settings updated.');
     } catch {
       RNAlert.alert('Error', 'Could not save settings.');
