@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "SafeR Home",
+    "slug": "safer-home-app",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0B1F33"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ci.safer.home"
+    },
+    "android": {
+      "package": "ci.safer.home"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
