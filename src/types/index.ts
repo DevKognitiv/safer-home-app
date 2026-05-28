@@ -84,4 +84,5 @@ export type RootStackParamList = {
 export type RootTabParamList = {
   Alerts: undefined;
   Sensors: undefined;
+  Settings: undefined;
 };

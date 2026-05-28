@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -5,7 +6,10 @@ import { StatusBar } from 'expo-status-bar';
 import { RootStackParamList, RootTabParamList } from '@/types';
 import HomeScreen from '@/screens/HomeScreen';
 import SensorsScreen from '@/screens/SensorsScreen';
+import SettingsScreen from '@/screens/SettingsScreen';
 import AlertDetailScreen from '@/screens/AlertDetailScreen';
+import { saferCIService } from '@/services/SaferCIService';
+import { loadConnectionConfig } from '@/services/storage';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -39,11 +43,28 @@ function Tabs() {
         options={{ title: 'SafeR Home' }}
       />
       <Tab.Screen name="Sensors" component={SensorsScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const config = await loadConnectionConfig();
+      if (cancelled) {
+        return;
+      }
+      saferCIService.setConfig(config);
+      saferCIService.connect();
+    })();
+    return () => {
+      cancelled = true;
+      saferCIService.disconnect();
+    };
+  }, []);
+
   return (
     <NavigationContainer theme={theme}>
       <StatusBar style="light" />

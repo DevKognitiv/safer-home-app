@@ -43,7 +43,6 @@ export default function HomeScreen({ navigation }: Props) {
   useEffect(() => {
     const unsubAlerts = saferCIService.onAlerts(setAlerts);
     const unsubState = saferCIService.onStateChange(setConnection);
-    saferCIService.connect();
     return () => {
       unsubAlerts();
       unsubState();
