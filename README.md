@@ -2,31 +2,59 @@
 
 Mobile companion for the **SafeR CI** emergency-response platform.
 
-SafeR Home connects to a SafeR CI / Home Assistant instance over WebSocket and
-shows real-time alert status. Users can view active alerts, open an alert for
-detail, acknowledge it, and see sensor status.
+SafeR Home connects to a SafeR CI / Home Assistant instance over the Home
+Assistant WebSocket API and shows real-time alert status. Users can view active
+alerts, open an alert for detail, acknowledge it, see sensor status, and
+receive notifications when new alerts fire.
 
 ## Tech stack
 
 - [Expo](https://expo.dev/) SDK 51
 - React Native 0.74
 - TypeScript (strict)
-- React Navigation (native stack)
+- React Navigation (native stack + bottom tabs)
+- React Context + `useReducer` for app state
+- expo-secure-store (token) + AsyncStorage (config & offline cache)
+- expo-notifications (local alert notifications)
+- Jest + @testing-library/react-native
+
+## Features
+
+- **Real-time alerts** via the Home Assistant WebSocket API (auth handshake,
+  `get_states` snapshot, `subscribe_events` on `state_changed`).
+- **Acknowledge** alerts through a configurable `call_service`, with optimistic
+  UI and rollback on failure.
+- **Sensor dashboard** with kind, last value, and online status.
+- **Notifications** for newly active warning/critical alerts.
+- **Settings** to configure host/port/path/TLS/token/acknowledge service,
+  persisted across launches (token in secure storage).
+- **Offline support**: last-known alerts and sensors are cached and shown while
+  reconnecting; pull-to-refresh and tap-to-reconnect throughout.
 
 ## Project structure
 
 ```
-App.tsx                       Entry point + navigation stack
+App.tsx                          Providers + navigation
 src/
-  screens/
-    HomeScreen.tsx            Alert list + connection status
-    AlertDetailScreen.tsx     Alert detail + acknowledge
-  services/
-    SaferCIService.ts         WebSocket client for SafeR CI (stub)
-  types/
-    index.ts                  Alert, SensorStatus, ConnectionConfig, …
+  components/
+    ConnectionBanner.tsx         Connection status + reconnect
   constants/
-    config.ts                 Default connection config (host/port/ws path)
+    config.ts                    Default config + URL builder
+  screens/
+    HomeScreen.tsx               Alert list
+    AlertDetailScreen.tsx        Alert detail + acknowledge
+    SensorsScreen.tsx            Sensor status
+    SettingsScreen.tsx           Connection settings
+  services/
+    SaferCIService.ts            Home Assistant WebSocket client
+    entityMapping.ts             Entity -> Alert/SensorStatus mapping
+    notifications.ts             expo-notifications + alert selector
+    storage.ts                   Persisted config, token, and cache
+  state/
+    AppContext.tsx               Provider, lifecycle, actions
+    appReducer.ts                Pure reducer
+  types/
+    index.ts                     Shared types
 ```
 
 ## Getting started
@@ -41,27 +69,34 @@ npm run ios        # or: open on iOS
 npm run web        # or: open in a browser
 ```
 
-Type-check the project:
+Type-check and test:
 
 ```bash
 npm run tsc
+npm test
 ```
 
 ## Configuration
 
-Default connection settings live in `src/constants/config.ts`:
+Defaults live in `src/constants/config.ts` and can be edited at runtime from the
+**Settings** tab:
 
-| Setting   | Default            | Description                              |
-| --------- | ------------------ | ---------------------------------------- |
-| `host`    | `192.168.1.100`    | SafeR CI / Home Assistant host           |
-| `port`    | `8123`             | WebSocket port                           |
-| `wsPath`  | `/api/websocket`   | WebSocket path                           |
-| `secure`  | `false`            | Use `wss://` instead of `ws://`          |
+| Setting              | Default            | Description                            |
+| -------------------- | ------------------ | -------------------------------------- |
+| `host`               | `192.168.1.100`    | SafeR CI / Home Assistant host         |
+| `port`               | `8123`             | WebSocket port                         |
+| `wsPath`             | `/api/websocket`   | WebSocket path                         |
+| `secure`             | `false`            | Use `wss://` instead of `ws://`        |
+| `token`              | —                  | Long-lived access token (secure store) |
+| `alertDomains`       | `["alert"]`        | Entity domains treated as alerts       |
+| `sensorDomains`      | `binary_sensor`, `sensor` | Domains surfaced as sensors     |
+| `acknowledgeService` | `safer_ci.acknowledge` | Service called to acknowledge   |
 
-Update these for your instance, or wire them to a settings screen.
+## Building
 
-## Status
+[EAS Build](https://docs.expo.dev/build/introduction/) profiles are defined in
+`eas.json` (`development`, `preview`, `production`):
 
-This is an early scaffold. The WebSocket transport in `SaferCIService` is in
-place, but the SafeR CI message protocol (auth handshake, event subscription,
-payload parsing) is marked with `TODO` and not yet implemented.
+```bash
+npx eas build --profile preview --platform ios
+```
