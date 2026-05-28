@@ -10,6 +10,12 @@ import SettingsScreen from '@/screens/SettingsScreen';
 import AlertDetailScreen from '@/screens/AlertDetailScreen';
 import { saferCIService } from '@/services/SaferCIService';
 import { loadConnectionConfig } from '@/services/storage';
+import {
+  configureNotificationHandler,
+  presentAlertNotification,
+  requestNotificationPermissions,
+  selectAlertsToNotify,
+} from '@/services/notifications';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -51,7 +57,23 @@ function Tabs() {
 export default function App() {
   useEffect(() => {
     let cancelled = false;
+    let notifiedIds = new Set<string>();
+    let notificationsEnabled = false;
+
+    configureNotificationHandler();
+
+    const unsubscribe = saferCIService.onAlerts((alerts) => {
+      const result = selectAlertsToNotify(notifiedIds, alerts);
+      notifiedIds = result.notifiedIds;
+      if (notificationsEnabled) {
+        result.toNotify.forEach((alert) => {
+          void presentAlertNotification(alert);
+        });
+      }
+    });
+
     (async () => {
+      notificationsEnabled = await requestNotificationPermissions();
       const config = await loadConnectionConfig();
       if (cancelled) {
         return;
@@ -59,8 +81,10 @@ export default function App() {
       saferCIService.setConfig(config);
       saferCIService.connect();
     })();
+
     return () => {
       cancelled = true;
+      unsubscribe();
       saferCIService.disconnect();
     };
   }, []);
