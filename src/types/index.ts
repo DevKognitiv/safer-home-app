@@ -76,6 +76,12 @@ export interface HassEntityState {
 
 /** Navigation parameter list for the root native stack. */
 export type RootStackParamList = {
-  Home: undefined;
+  Tabs: undefined;
   AlertDetail: { alertId: string };
+};
+
+/** Navigation parameter list for the bottom tab navigator. */
+export type RootTabParamList = {
+  Alerts: undefined;
+  Sensors: undefined;
 };

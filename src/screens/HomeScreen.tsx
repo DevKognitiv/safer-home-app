@@ -6,11 +6,21 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { CompositeScreenProps } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Alert, ConnectionState, RootStackParamList } from '@/types';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import {
+  Alert,
+  ConnectionState,
+  RootStackParamList,
+  RootTabParamList,
+} from '@/types';
 import { saferCIService } from '@/services/SaferCIService';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<RootTabParamList, 'Alerts'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
 
 const SEVERITY_COLOR: Record<Alert['severity'], string> = {
   info: '#3B82F6',

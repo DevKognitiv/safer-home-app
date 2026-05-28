@@ -1,11 +1,14 @@
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
-import { RootStackParamList } from '@/types';
+import { RootStackParamList, RootTabParamList } from '@/types';
 import HomeScreen from '@/screens/HomeScreen';
+import SensorsScreen from '@/screens/SensorsScreen';
 import AlertDetailScreen from '@/screens/AlertDetailScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const theme = {
   ...DefaultTheme,
@@ -19,6 +22,27 @@ const theme = {
   },
 };
 
+function Tabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#0B1F33' },
+        headerTintColor: '#F8FAFC',
+        tabBarStyle: { backgroundColor: '#0B1F33', borderTopColor: '#13314F' },
+        tabBarActiveTintColor: '#22C55E',
+        tabBarInactiveTintColor: '#94A3B8',
+      }}
+    >
+      <Tab.Screen
+        name="Alerts"
+        component={HomeScreen}
+        options={{ title: 'SafeR Home' }}
+      />
+      <Tab.Screen name="Sensors" component={SensorsScreen} />
+    </Tab.Navigator>
+  );
+}
+
 export default function App() {
   return (
     <NavigationContainer theme={theme}>
@@ -30,9 +54,9 @@ export default function App() {
         }}
       >
         <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ title: 'SafeR Home' }}
+          name="Tabs"
+          component={Tabs}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="AlertDetail"
