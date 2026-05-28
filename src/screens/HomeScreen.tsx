@@ -1,5 +1,8 @@
+import { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -8,13 +11,9 @@ import {
 import { CompositeScreenProps } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import {
-  Alert,
-  ConnectionState,
-  RootStackParamList,
-  RootTabParamList,
-} from '@/types';
+import { Alert, RootStackParamList, RootTabParamList } from '@/types';
 import { useApp } from '@/state/AppContext';
+import { ConnectionBanner } from '@/components/ConnectionBanner';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Alerts'>,
@@ -27,79 +26,87 @@ const SEVERITY_COLOR: Record<Alert['severity'], string> = {
   critical: '#EF4444',
 };
 
-const STATE_LABEL: Record<ConnectionState, string> = {
-  disconnected: 'Disconnected',
-  connecting: 'Connecting…',
-  authenticating: 'Authenticating…',
-  connected: 'Connected',
-  error: 'Connection error',
-};
-
 export default function HomeScreen({ navigation }: Props) {
-  const { state } = useApp();
-  const { alerts, connection } = state;
+  const { state, reconnect } = useApp();
+  const { alerts, connection, hydrated } = state;
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (connection === 'connected' || connection === 'error') {
+      setRefreshing(false);
+    }
+  }, [connection]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    reconnect();
+  }, [reconnect]);
+
+  const connecting =
+    connection === 'connecting' || connection === 'authenticating';
+  const showSpinner = connecting && alerts.length === 0 && hydrated;
 
   return (
     <View style={styles.container}>
-      <View style={styles.statusBar}>
-        <View
-          style={[
-            styles.statusDot,
-            connection === 'connected' ? styles.dotOnline : styles.dotOffline,
-          ]}
-        />
-        <Text style={styles.statusText}>{STATE_LABEL[connection]}</Text>
-      </View>
+      <ConnectionBanner connection={connection} onReconnect={reconnect} />
 
-      <FlatList
-        data={alerts}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={
-          alerts.length === 0 ? styles.emptyContainer : undefined
-        }
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No active alerts.</Text>
-        }
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() =>
-              navigation.navigate('AlertDetail', { alertId: item.id })
-            }
-          >
-            <View
-              style={[
-                styles.severityBar,
-                { backgroundColor: SEVERITY_COLOR[item.severity] },
-              ]}
+      {showSpinner ? (
+        <View style={styles.center}>
+          <ActivityIndicator color="#22C55E" />
+        </View>
+      ) : (
+        <FlatList
+          data={alerts}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={
+            alerts.length === 0 ? styles.emptyContainer : undefined
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#94A3B8"
             />
-            <View style={styles.cardBody}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardMeta}>
-                {item.severity.toUpperCase()} · {item.state}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      />
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              {connection === 'connected'
+                ? 'No active alerts.'
+                : 'No cached alerts. Pull to reconnect.'}
+            </Text>
+          }
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() =>
+                navigation.navigate('AlertDetail', { alertId: item.id })
+              }
+            >
+              <View
+                style={[
+                  styles.severityBar,
+                  { backgroundColor: SEVERITY_COLOR[item.severity] },
+                ]}
+              />
+              <View style={styles.cardBody}>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardMeta}>
+                  {item.severity.toUpperCase()} · {item.state}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0B1F33' },
-  statusBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  statusDot: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
-  dotOnline: { backgroundColor: '#22C55E' },
-  dotOffline: { backgroundColor: '#9CA3AF' },
-  statusText: { color: '#E2E8F0', fontSize: 14 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyContainer: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' },
-  emptyText: { color: '#94A3B8', fontSize: 16 },
+  emptyText: { color: '#94A3B8', fontSize: 16, textAlign: 'center', paddingHorizontal: 32 },
   card: {
     flexDirection: 'row',
     marginHorizontal: 16,

@@ -1,6 +1,8 @@
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SensorKind } from '@/types';
 import { useApp } from '@/state/AppContext';
+import { ConnectionBanner } from '@/components/ConnectionBanner';
 
 const KIND_LABEL: Record<SensorKind, string> = {
   motion: 'Motion',
@@ -14,19 +16,43 @@ const KIND_LABEL: Record<SensorKind, string> = {
 };
 
 export default function SensorsScreen() {
-  const { state } = useApp();
-  const { sensors } = state;
+  const { state, reconnect } = useApp();
+  const { sensors, connection } = state;
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (connection === 'connected' || connection === 'error') {
+      setRefreshing(false);
+    }
+  }, [connection]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    reconnect();
+  }, [reconnect]);
 
   return (
     <View style={styles.container}>
+      <ConnectionBanner connection={connection} onReconnect={reconnect} />
       <FlatList
         data={sensors}
         keyExtractor={(item) => item.id}
         contentContainerStyle={
           sensors.length === 0 ? styles.emptyContainer : styles.listContent
         }
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#94A3B8"
+          />
+        }
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No sensors reported.</Text>
+          <Text style={styles.emptyText}>
+            {connection === 'connected'
+              ? 'No sensors reported.'
+              : 'No cached sensors. Pull to reconnect.'}
+          </Text>
         }
         renderItem={({ item }) => (
           <View style={styles.row}>

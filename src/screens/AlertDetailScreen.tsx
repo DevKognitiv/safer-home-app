@@ -1,4 +1,12 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert as RNAlert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/types';
 import { useAlert, useApp } from '@/state/AppContext';
@@ -9,6 +17,24 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
   const { alertId } = route.params;
   const { acknowledge } = useApp();
   const alert = useAlert(alertId);
+  const [busy, setBusy] = useState(false);
+
+  async function onAcknowledge() {
+    if (busy) {
+      return;
+    }
+    setBusy(true);
+    try {
+      await acknowledge(alertId);
+      navigation.goBack();
+    } catch {
+      setBusy(false);
+      RNAlert.alert(
+        'Acknowledge failed',
+        'Could not reach SafeR CI. The alert was not acknowledged.',
+      );
+    }
+  }
 
   if (!alert) {
     return (
@@ -30,16 +56,17 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
       <Text style={styles.timestamp}>Raised: {alert.raisedAt}</Text>
 
       <TouchableOpacity
-        style={[styles.button, acknowledged && styles.buttonDisabled]}
-        disabled={acknowledged}
-        onPress={() => {
-          void acknowledge(alert.id);
-          navigation.goBack();
-        }}
+        style={[styles.button, (acknowledged || busy) && styles.buttonDisabled]}
+        disabled={acknowledged || busy}
+        onPress={onAcknowledge}
       >
-        <Text style={styles.buttonText}>
-          {acknowledged ? 'Acknowledged' : 'Acknowledge alert'}
-        </Text>
+        {busy ? (
+          <ActivityIndicator color="#0B1F33" />
+        ) : (
+          <Text style={styles.buttonText}>
+            {acknowledged ? 'Acknowledged' : 'Acknowledge alert'}
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );
