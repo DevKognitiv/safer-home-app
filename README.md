@@ -78,19 +78,26 @@ npm test
 
 ## Configuration
 
-Defaults live in `src/constants/config.ts` and can be edited at runtime from the
-**Settings** tab:
+Every setting lives in `src/constants/config.ts` as a default and is editable at
+runtime from the **Settings** tab (changes are persisted and trigger a
+reconnect). The entity-mapping settings (`alertDomains`, `sensorDomains`,
+`acknowledgeService`) let the app work against any SafeR CI / Home Assistant
+deployment without code changes — adjust them to match your entity conventions.
 
-| Setting              | Default            | Description                            |
-| -------------------- | ------------------ | -------------------------------------- |
-| `host`               | `192.168.1.100`    | SafeR CI / Home Assistant host         |
-| `port`               | `8123`             | WebSocket port                         |
-| `wsPath`             | `/api/websocket`   | WebSocket path                         |
-| `secure`             | `false`            | Use `wss://` instead of `ws://`        |
-| `token`              | —                  | Long-lived access token (secure store) |
-| `alertDomains`       | `["alert"]`        | Entity domains treated as alerts       |
-| `sensorDomains`      | `binary_sensor`, `sensor` | Domains surfaced as sensors     |
-| `acknowledgeService` | `safer_ci.acknowledge` | Service called to acknowledge   |
+| Setting              | Default                   | Description                                            |
+| -------------------- | ------------------------- | ------------------------------------------------------ |
+| `host`               | `192.168.1.100`           | SafeR CI / Home Assistant host                         |
+| `port`               | `8123`                    | WebSocket port                                         |
+| `wsPath`             | `/api/websocket`          | WebSocket path                                         |
+| `secure`             | `false`                   | Use `wss://` instead of `ws://`                        |
+| `token`              | —                         | Long-lived access token (stored in secure storage)    |
+| `acknowledgeService` | `safer_ci.acknowledge`    | `domain.service` called to acknowledge an alert        |
+| `alertDomains`       | `alert`                   | Comma-separated entity domains treated as alerts       |
+| `sensorDomains`      | `binary_sensor, sensor`   | Comma-separated entity domains surfaced as sensors     |
+
+Alerts are considered active when their entity state is `on`; severity is read
+from a `severity` attribute when present, otherwise inferred from the entity's
+`device_class`.
 
 ## Building
 
