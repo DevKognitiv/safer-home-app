@@ -24,6 +24,12 @@ export default function SettingsScreen() {
   const [acknowledgeService, setAcknowledgeService] = useState(
     initial.acknowledgeService,
   );
+  const [alertDomains, setAlertDomains] = useState(
+    initial.alertDomains.join(', '),
+  );
+  const [sensorDomains, setSensorDomains] = useState(
+    initial.sensorDomains.join(', '),
+  );
   const [saving, setSaving] = useState(false);
 
   const portNumber = Number(port);
@@ -43,6 +49,8 @@ export default function SettingsScreen() {
       return;
     }
     setSaving(true);
+    const parsedAlertDomains = parseDomains(alertDomains);
+    const parsedSensorDomains = parseDomains(sensorDomains);
     const next: ConnectionConfig = {
       ...initial,
       host: host.trim(),
@@ -51,6 +59,12 @@ export default function SettingsScreen() {
       secure,
       token: token.trim() ? token.trim() : undefined,
       acknowledgeService: acknowledgeService.trim() || initial.acknowledgeService,
+      alertDomains: parsedAlertDomains.length
+        ? parsedAlertDomains
+        : initial.alertDomains,
+      sensorDomains: parsedSensorDomains.length
+        ? parsedSensorDomains
+        : initial.sensorDomains,
     };
     try {
       await updateConfig(next);
@@ -133,6 +147,30 @@ export default function SettingsScreen() {
         />
       </Field>
 
+      <Field label="Alert domains (comma-separated)">
+        <TextInput
+          style={styles.input}
+          value={alertDomains}
+          onChangeText={setAlertDomains}
+          autoCapitalize="none"
+          autoCorrect={false}
+          placeholder="alert"
+          placeholderTextColor="#64748B"
+        />
+      </Field>
+
+      <Field label="Sensor domains (comma-separated)">
+        <TextInput
+          style={styles.input}
+          value={sensorDomains}
+          onChangeText={setSensorDomains}
+          autoCapitalize="none"
+          autoCorrect={false}
+          placeholder="binary_sensor, sensor"
+          placeholderTextColor="#64748B"
+        />
+      </Field>
+
       <Text style={styles.preview}>{preview}</Text>
 
       <TouchableOpacity
@@ -146,6 +184,13 @@ export default function SettingsScreen() {
       </TouchableOpacity>
     </ScrollView>
   );
+}
+
+function parseDomains(value: string): string[] {
+  return value
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
 }
 
 function Field({
