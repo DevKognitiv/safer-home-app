@@ -1,0 +1,62 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    labels:
+      - dependencies
+    groups:
+      react-navigation:
+        patterns:
+          - "@react-navigation/*"
+      types:
+        patterns:
+          - "@types/*"
+      testing:
+        patterns:
+          - "jest"
+          - "jest-*"
+          - "@testing-library/*"
+          - "react-test-renderer"
+    ignore:
+      # Anything pinned by Expo SDK 51 — only patch updates flow automatically.
+      # Major/minor bumps require a coordinated Expo SDK upgrade.
+      - dependency-name: "expo"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "expo-*"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+      - dependency-name: "react"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "react-native"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+      - dependency-name: "react-test-renderer"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "react-native-screens"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+      - dependency-name: "react-native-safe-area-context"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+      - dependency-name: "@react-native-async-storage/async-storage"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
