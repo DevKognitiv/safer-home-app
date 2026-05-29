@@ -102,8 +102,30 @@ from a `severity` attribute when present, otherwise inferred from the entity's
 ## Building
 
 [EAS Build](https://docs.expo.dev/build/introduction/) profiles are defined in
-`eas.json` (`development`, `preview`, `production`):
+`eas.json` (`development`, `preview`, `production`).
+
+First-time setup — link the project to an Expo account and create an EAS
+project id (writes `expo.extra.eas.projectId` into `app.json`):
 
 ```bash
-npx eas build --profile preview --platform ios
+npm install --global eas-cli   # or use: npx eas-cli
+eas login
+eas init                       # one-time, links the repo to an EAS project
+```
+
+Then trigger a build:
+
+```bash
+eas build --profile preview --platform ios
+eas build --profile production --platform android
+```
+
+### App assets
+
+`assets/icon.png`, `adaptive-icon.png`, `splash.png`, and `favicon.png` are
+**solid-color placeholders** in the brand navy `#0B1F33`. Replace them with
+real artwork before public release. They can be regenerated with:
+
+```bash
+node scripts/generate-placeholder-assets.js
 ```
